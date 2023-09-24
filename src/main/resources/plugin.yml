@@ -1,0 +1,4 @@
+name: BetterWorldEditor
+version: '${project.version}'
+main: com.zqo.betterworldeditor.BetterWorldEditor
+api-version: '1.20'
