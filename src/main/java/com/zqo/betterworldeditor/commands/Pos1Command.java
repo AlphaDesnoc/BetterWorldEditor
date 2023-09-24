@@ -1,5 +1,7 @@
 package com.zqo.betterworldeditor.commands;
 
+import com.zqo.betterworldeditor.BetterWorldEditor;
+import com.zqo.betterworldeditor.api.SelectionManager;
 import com.zqo.betterworldeditor.listeners.SelectionListener;
 import org.bukkit.Location;
 import org.bukkit.command.CommandSender;
@@ -8,6 +10,9 @@ import org.bukkit.entity.Player;
 
 public final class Pos1Command extends BukkitCommand
 {
+    private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
+    private final SelectionManager selectionManager = betterWorldEditor.getSelectionManager();
+
     public Pos1Command()
     {
         super("pos1");
@@ -23,7 +28,7 @@ public final class Pos1Command extends BukkitCommand
 
         final Location location = player.getLocation();
 
-        SelectionListener.setFirstSelection(location, player);
+        selectionManager.setFirstSelection(location, player);
 
         return false;
     }

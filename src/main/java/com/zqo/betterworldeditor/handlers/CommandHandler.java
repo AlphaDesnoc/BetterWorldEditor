@@ -11,7 +11,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public final class CommandHandler
 {
-    private final BetterWorldEditor eco = BetterWorldEditor.getWorldZqo();
+    private final BetterWorldEditor eco = BetterWorldEditor.getBetterWorldEditor();
 
     public void register()
     {

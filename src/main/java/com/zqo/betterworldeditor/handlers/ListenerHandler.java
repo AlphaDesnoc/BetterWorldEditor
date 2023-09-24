@@ -10,7 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 
 public final class ListenerHandler
 {
-    private final BetterWorldEditor eco = BetterWorldEditor.getWorldZqo();
+    private final BetterWorldEditor eco = BetterWorldEditor.getBetterWorldEditor();
 
     public void register()
     {

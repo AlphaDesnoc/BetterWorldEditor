@@ -1,8 +1,12 @@
 package com.zqo.betterworldeditor.commands;
 
+import com.zqo.betterworldeditor.BetterWorldEditor;
+import com.zqo.betterworldeditor.api.BlockData;
+import com.zqo.betterworldeditor.api.CopiedBlocks;
+import com.zqo.betterworldeditor.api.SelectionManager;
+import com.zqo.betterworldeditor.api.Timer;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.World;
-import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
@@ -11,6 +15,11 @@ import java.util.List;
 
 public final class PasteCommand extends BukkitCommand
 {
+    private long counter;
+    private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
+    private final Timer timer = new Timer();
+    private final CopiedBlocks copiedBlocks = betterWorldEditor.getCopiedBlocks();
+
     public PasteCommand()
     {
         super("paste");
@@ -24,21 +33,32 @@ public final class PasteCommand extends BukkitCommand
             return false;
         }
 
-        final List<Block> pasteBlocks = CopyCommand.getCopyBlocks();
-        final Location playerLocation = player.getLocation();
-        final World world = playerLocation.getWorld();
+        final List<BlockData> copiedBlockData = copiedBlocks.getBlocksData();
 
-        for (Block block : pasteBlocks) {
-            final Location originalLocation = block.getLocation();
-            final Location newLocation = new Location(world, playerLocation.getX() + (originalLocation.getX() - pasteBlocks.get(0).getX()),
-                    playerLocation.getY() + (originalLocation.getY() - pasteBlocks.get(0).getY()),
-                    playerLocation.getZ() + (originalLocation.getZ() - pasteBlocks.get(0).getZ()));
-
-            world.getBlockAt(newLocation).setType(block.getType());
-            world.getBlockAt(newLocation).setBlockData(block.getBlockData());
+        if (copiedBlockData.isEmpty()) {
+            player.sendMessage("Aucun bloc copié à coller.");
+            return true;
         }
 
-        player.sendMessage("Collage effectué.");
+        timer.start();
+
+        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
+            for (BlockData blockData : copiedBlockData) {
+                final Location originalLocation = blockData.getLocation();
+                final Location newLocation = player.getLocation()
+                        .add(originalLocation.getX() - copiedBlockData.get(0).getLocation().getX(),
+                                originalLocation.getY() - copiedBlockData.get(0).getLocation().getY(),
+                                originalLocation.getZ() - copiedBlockData.get(0).getLocation().getZ());
+
+                player.getWorld().getBlockAt(newLocation).setType(blockData.getMaterial());
+                player.getWorld().getBlockAt(newLocation).setBlockData(blockData.getBlockData());
+                counter++;
+            }
+
+            final double executionTimeSeconds = timer.stop();
+
+            player.sendMessage("Collage effectué de " + counter + " blocs en " + executionTimeSeconds + " secondes.");
+        });
 
         return false;
     }
