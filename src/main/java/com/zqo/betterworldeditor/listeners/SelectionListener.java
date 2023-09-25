@@ -11,10 +11,12 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
+import java.util.Map;
+
 public final class SelectionListener implements Listener
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final SelectionManager selectionManager = betterWorldEditor.getSelectionManager();
+    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
 
     @EventHandler
     public void onSelect(final PlayerInteractEvent event)
@@ -31,6 +33,8 @@ public final class SelectionListener implements Listener
         if (!item.getType().equals(Material.IRON_AXE)) {
             return;
         }
+
+        final SelectionManager selectionManager = selectionManagerMap.get(player);
 
         event.setCancelled(true);
 

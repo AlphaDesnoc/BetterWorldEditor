@@ -11,11 +11,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
+
 public final class ReplaceCommand extends BukkitCommand
 {
-    private long counter;
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final SelectionManager selectionManager = betterWorldEditor.getSelectionManager();
+    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
     private final Timer timer = new Timer();
 
     public ReplaceCommand()
@@ -30,6 +31,8 @@ public final class ReplaceCommand extends BukkitCommand
             sender.sendMessage("Cette commande est réservée aux joueurs.");
             return false;
         }
+
+        final SelectionManager selectionManager = selectionManagerMap.get(player);
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de replace quelque chose.");
@@ -51,7 +54,7 @@ public final class ReplaceCommand extends BukkitCommand
             timer.start();
 
             Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-                replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace);
+                int counter = replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace);
 
                 final double executionTimeSeconds = timer.stop();
 
@@ -62,8 +65,10 @@ public final class ReplaceCommand extends BukkitCommand
         return false;
     }
 
-    private void replaceBlocks(final Location firstSelection, final Location secondSelection, final Material materialToBeReplace, final Material materialToReplace)
+    private int replaceBlocks(final Location firstSelection, final Location secondSelection, final Material materialToBeReplace, final Material materialToReplace)
     {
+        int counter = 0;
+
         for (int x = Math.min(firstSelection.getBlockX(), secondSelection.getBlockX()); x <= Math.max(firstSelection.getBlockX(), secondSelection.getBlockX()); x++) {
             for (int y = Math.min(firstSelection.getBlockY(), secondSelection.getBlockY()); y <= Math.max(firstSelection.getBlockY(), secondSelection.getBlockY()); y++) {
                 for (int z = Math.min(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z <= Math.max(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z++) {
@@ -77,5 +82,7 @@ public final class ReplaceCommand extends BukkitCommand
                 }
             }
         }
+
+        return counter;
     }
 }

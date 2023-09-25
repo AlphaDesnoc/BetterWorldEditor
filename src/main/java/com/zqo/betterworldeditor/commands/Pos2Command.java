@@ -7,10 +7,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
+
 public final class Pos2Command extends BukkitCommand
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final SelectionManager selectionManager = betterWorldEditor.getSelectionManager();
+    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
 
     public Pos2Command()
     {
@@ -26,6 +28,7 @@ public final class Pos2Command extends BukkitCommand
         }
 
         final Location location = player.getLocation();
+        final SelectionManager selectionManager = selectionManagerMap.get(player);
 
         selectionManager.setSecondSelection(location, player);
 

@@ -12,13 +12,13 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.Map;
 
 public final class PasteCommand extends BukkitCommand
 {
-    private long counter;
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
+    private final Map<Player, CopiedBlocks> copiedBlocksMap = betterWorldEditor.getCopiedBlocksMap();
     private final Timer timer = new Timer();
-    private final CopiedBlocks copiedBlocks = betterWorldEditor.getCopiedBlocks();
 
     public PasteCommand()
     {
@@ -33,6 +33,7 @@ public final class PasteCommand extends BukkitCommand
             return false;
         }
 
+        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(player);
         final List<BlockData> copiedBlockData = copiedBlocks.getBlocksData();
 
         if (copiedBlockData.isEmpty()) {
@@ -43,7 +44,9 @@ public final class PasteCommand extends BukkitCommand
         timer.start();
 
         Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            for (BlockData blockData : copiedBlockData) {
+            int counter = 0;
+
+            for (final BlockData blockData : copiedBlockData) {
                 final Location originalLocation = blockData.getLocation();
                 final Location newLocation = player.getLocation()
                         .add(originalLocation.getX() - copiedBlockData.get(0).getLocation().getX(),

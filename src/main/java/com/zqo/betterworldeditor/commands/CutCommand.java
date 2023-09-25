@@ -11,11 +11,12 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
+
 public final class CutCommand extends BukkitCommand
 {
-    private long counter;
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final SelectionManager selectionManager = betterWorldEditor.getSelectionManager();
+    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
     private final Timer timer = new Timer();
 
     public CutCommand()
@@ -31,6 +32,8 @@ public final class CutCommand extends BukkitCommand
             return false;
         }
 
+        final SelectionManager selectionManager = selectionManagerMap.get(player);
+
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de cut quelque chose.");
             return true;
@@ -39,7 +42,7 @@ public final class CutCommand extends BukkitCommand
         timer.start();
 
         Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection());
+            int counter = cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection());
 
             final double executionTimeSeconds = timer.stop();
 
@@ -49,8 +52,10 @@ public final class CutCommand extends BukkitCommand
         return false;
     }
 
-    private void cutBlocks(final Location firstSelection, final Location secondSelection)
+    private int cutBlocks(final Location firstSelection, final Location secondSelection)
     {
+        int counter = 0;
+
         for (int x = Math.min(firstSelection.getBlockX(), secondSelection.getBlockX()); x <= Math.max(firstSelection.getBlockX(), secondSelection.getBlockX()); x++) {
             for (int y = Math.min(firstSelection.getBlockY(), secondSelection.getBlockY()); y <= Math.max(firstSelection.getBlockY(), secondSelection.getBlockY()); y++) {
                 for (int z = Math.min(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z <= Math.max(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z++) {
@@ -64,5 +69,6 @@ public final class CutCommand extends BukkitCommand
                 }
             }
         }
+        return counter;
     }
 }
