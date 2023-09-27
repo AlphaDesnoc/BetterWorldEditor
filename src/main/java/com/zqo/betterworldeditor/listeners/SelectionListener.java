@@ -12,11 +12,11 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.Map;
+import java.util.UUID;
 
 public final class SelectionListener implements Listener
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
 
     @EventHandler
     public void onSelect(final PlayerInteractEvent event)
@@ -34,7 +34,7 @@ public final class SelectionListener implements Listener
             return;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player);
+        final SelectionManager selectionManager = betterWorldEditor.getSelectionManagerMap().get(player.getUniqueId());
 
         event.setCancelled(true);
 

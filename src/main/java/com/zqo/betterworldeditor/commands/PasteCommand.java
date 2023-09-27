@@ -13,11 +13,12 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class PasteCommand extends BukkitCommand
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<Player, CopiedBlocks> copiedBlocksMap = betterWorldEditor.getCopiedBlocksMap();
+    private final Map<UUID, CopiedBlocks> copiedBlocksMap = betterWorldEditor.getCopiedBlocksMap();
     private final Timer timer = new Timer();
 
     public PasteCommand()
@@ -33,7 +34,7 @@ public final class PasteCommand extends BukkitCommand
             return false;
         }
 
-        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(player);
+        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(player.getUniqueId());
         final List<BlockData> copiedBlockData = copiedBlocks.getBlocksData();
 
         if (copiedBlockData.isEmpty()) {

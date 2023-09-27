@@ -2,6 +2,7 @@ package com.zqo.betterworldeditor.handlers;
 
 import com.google.common.reflect.ClassPath;
 import com.zqo.betterworldeditor.BetterWorldEditor;
+import net.minecraft.server.MinecraftServer;
 import org.bukkit.command.Command;
 import org.bukkit.command.SimpleCommandMap;
 import org.bukkit.craftbukkit.v1_20_R1.CraftServer;
@@ -27,6 +28,7 @@ public final class CommandHandler
                         final SimpleCommandMap commandMap = ((CraftServer) eco.getServer()).getCommandMap();
                         commandMap.register(eco.getDescription().getName(), command);
                     }
+
                 } catch (IllegalAccessException | ClassNotFoundException | InvocationTargetException | InstantiationException | NoSuchMethodException e) {
                     e.printStackTrace();
                 }

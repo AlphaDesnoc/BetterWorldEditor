@@ -1,8 +1,7 @@
 package com.zqo.betterworldeditor.commands;
 
 import com.zqo.betterworldeditor.BetterWorldEditor;
-import com.zqo.betterworldeditor.api.SelectionManager;
-import com.zqo.betterworldeditor.api.Timer;
+import com.zqo.betterworldeditor.api.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,12 +10,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class CutCommand extends BukkitCommand
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
+    private final Map<UUID, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
     private final Timer timer = new Timer();
 
     public CutCommand()
@@ -32,7 +34,7 @@ public final class CutCommand extends BukkitCommand
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player);
+        final SelectionManager selectionManager = selectionManagerMap.get(player.getUniqueId());
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de cut quelque chose.");
@@ -41,8 +43,14 @@ public final class CutCommand extends BukkitCommand
 
         timer.start();
 
+        final List<BlockData> blockDataList = new ArrayList<>();
+
         Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            int counter = cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection());
+            int counter = cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), blockDataList);
+
+            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
+
+            UndoUtils.addActionToList(undoBlocksList, ActionsEditor.CUT, blockDataList);
 
             final double executionTimeSeconds = timer.stop();
 
@@ -52,7 +60,7 @@ public final class CutCommand extends BukkitCommand
         return false;
     }
 
-    private int cutBlocks(final Location firstSelection, final Location secondSelection)
+    private int cutBlocks(final Location firstSelection, final Location secondSelection, final List<BlockData> blockDataList)
     {
         int counter = 0;
 
@@ -63,6 +71,7 @@ public final class CutCommand extends BukkitCommand
                     final Block block = location.getBlock();
 
                     if (block.getType() != Material.AIR) {
+                        blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
                         block.setType(Material.AIR);
                         counter++;
                     }

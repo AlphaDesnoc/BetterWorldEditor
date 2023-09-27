@@ -1,15 +1,19 @@
 package com.zqo.betterworldeditor.commands;
 
 import com.zqo.betterworldeditor.BetterWorldEditor;
-import com.zqo.betterworldeditor.api.Timer;
+import com.zqo.betterworldeditor.api.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.World;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class CubeCommand extends BukkitCommand
 {
@@ -57,6 +61,8 @@ public final class CubeCommand extends BukkitCommand
 
         timer.start();
 
+        final List<BlockData> blockDataList = new ArrayList<>();
+
         Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
             for (int x = 0; x < sideLength; x++) {
                 for (int y = 0; y < sideLength; y++) {
@@ -66,11 +72,17 @@ public final class CubeCommand extends BukkitCommand
                                 z == 0 || z == sideLength - 1) {
                             final Location blockLocation = startLocation.clone().add(x, y, z);
 
-                            world.getBlockAt(blockLocation).setType(material);
+                            final Block block = world.getBlockAt(blockLocation);
+                            blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
+                            block.setType(material);
                         }
                     }
                 }
             }
+
+            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
+
+            UndoUtils.addActionToList(undoBlocksList, ActionsEditor.CUBE, blockDataList);
 
             double executionTimeSeconds = timer.stop();
 

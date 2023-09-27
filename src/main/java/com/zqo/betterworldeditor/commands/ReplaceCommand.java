@@ -1,8 +1,7 @@
 package com.zqo.betterworldeditor.commands;
 
 import com.zqo.betterworldeditor.BetterWorldEditor;
-import com.zqo.betterworldeditor.api.SelectionManager;
-import com.zqo.betterworldeditor.api.Timer;
+import com.zqo.betterworldeditor.api.*;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -11,12 +10,15 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public final class ReplaceCommand extends BukkitCommand
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
+    private final Map<UUID, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
     private final Timer timer = new Timer();
 
     public ReplaceCommand()
@@ -32,7 +34,7 @@ public final class ReplaceCommand extends BukkitCommand
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player);
+        final SelectionManager selectionManager = selectionManagerMap.get(player.getUniqueId());
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de replace quelque chose.");
@@ -53,8 +55,14 @@ public final class ReplaceCommand extends BukkitCommand
 
             timer.start();
 
+            final List<BlockData> blockDataList = new ArrayList<>();
+
             Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-                int counter = replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace);
+                int counter = replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace, blockDataList);
+
+                final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
+
+                UndoUtils.addActionToList(undoBlocksList, ActionsEditor.SET, blockDataList);
 
                 final double executionTimeSeconds = timer.stop();
 
@@ -65,7 +73,7 @@ public final class ReplaceCommand extends BukkitCommand
         return false;
     }
 
-    private int replaceBlocks(final Location firstSelection, final Location secondSelection, final Material materialToBeReplace, final Material materialToReplace)
+    private int replaceBlocks(final Location firstSelection, final Location secondSelection, final Material materialToBeReplace, final Material materialToReplace, final List<BlockData> blockDataList)
     {
         int counter = 0;
 
@@ -76,6 +84,7 @@ public final class ReplaceCommand extends BukkitCommand
                     final Block block = location.getBlock();
 
                     if (block.getType().equals(materialToBeReplace)) {
+                        blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
                         block.setType(materialToReplace);
                         counter++;
                     }

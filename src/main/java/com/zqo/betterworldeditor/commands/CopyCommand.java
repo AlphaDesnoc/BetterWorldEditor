@@ -11,12 +11,13 @@ import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
+import java.util.UUID;
 
 public final class CopyCommand extends BukkitCommand
 {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<Player, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
-    private final Map<Player, CopiedBlocks> copiedBlocksMap = betterWorldEditor.getCopiedBlocksMap();
+    private final Map<UUID, SelectionManager> selectionManagerMap = betterWorldEditor.getSelectionManagerMap();
+    private final Map<UUID, CopiedBlocks> copiedBlocksMap = betterWorldEditor.getCopiedBlocksMap();
     private final Timer timer = new Timer();
 
     public CopyCommand()
@@ -32,8 +33,9 @@ public final class CopyCommand extends BukkitCommand
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player);
-        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(player);
+        final UUID uuid = player.getUniqueId();
+        final SelectionManager selectionManager = selectionManagerMap.get(uuid);
+        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(uuid);
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de copy quelque chose.");
