@@ -48,27 +48,34 @@ public final class UndoCommand extends BukkitCommand
         final List<UndoBlocks> redoBlocksList = betterWorldEditor.getRedoBlocksList(uuid);
         final UndoBlocks undoBlocks = undoBlocksList.get(undoBlocksList.size()-1);
         final List<BlockData> blockDataList = undoBlocks.getUndoBlocks();
+        final List<BlockData> previousBlockDataList = new ArrayList<>();
 
         if (blockDataList == null) {
             return false;
         }
 
-        final List<BlockData> previousBlockDataList = new ArrayList<>();
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            undoBlocks(blockDataList, previousBlockDataList);
 
+            UndoUtils.addActionToList(redoBlocksList, undoBlocks.getAction(), previousBlockDataList);
+            undoBlocksList.remove(undoBlocksList.size()-1);
+
+            player.sendMessage("Blocs restaurés avec succès.");
+        });
+
+        return true;
+    }
+
+    private void undoBlocks(final List<BlockData> blockDataList, final List<BlockData> previousBlockDataList)
+    {
         blockDataList.forEach(blockData -> {
-            final Location location = blockData.getLocation();
+            final Location location = blockData.location();
             final Block block = location.getBlock();
 
             previousBlockDataList.add(new BlockData(location, block.getType(), block.getBlockData()));
 
-            block.setType(blockData.getMaterial());
-            block.setBlockData(blockData.getBlockData());
+            block.setType(blockData.material());
+            block.setBlockData(blockData.blockData());
         });
-
-        UndoUtils.addActionToList(redoBlocksList, undoBlocks.getAction(), previousBlockDataList);
-        undoBlocksList.remove(undoBlocksList.size()-1);
-
-        player.sendMessage("[UNDO] Blocs restaurés avec succès.");
-        return false;
     }
 }

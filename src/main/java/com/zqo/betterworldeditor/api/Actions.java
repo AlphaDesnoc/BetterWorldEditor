@@ -1,6 +1,6 @@
 package com.zqo.betterworldeditor.api;
 
-public enum ActionsEditor
+public enum Actions
 {
     CUT,
     PASTE,

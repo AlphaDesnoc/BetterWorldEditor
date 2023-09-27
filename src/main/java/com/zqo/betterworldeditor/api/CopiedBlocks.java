@@ -10,9 +10,9 @@ public final class CopiedBlocks
 {
     private final List<BlockData> blockDataList = new ArrayList<>();
 
-    public void addBlock(Block block)
+    public void addBlock(final Block block)
     {
-        Location location = block.getLocation();
+        final Location location = block.getLocation();
         blockDataList.add(new BlockData(location, block.getType(), block.getBlockData()));
     }
 

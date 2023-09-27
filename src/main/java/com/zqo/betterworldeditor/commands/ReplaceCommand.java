@@ -34,7 +34,8 @@ public final class ReplaceCommand extends BukkitCommand
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player.getUniqueId());
+        final UUID uuid = player.getUniqueId();
+        final SelectionManager selectionManager = selectionManagerMap.get(uuid);
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de replace quelque chose.");
@@ -53,16 +54,15 @@ public final class ReplaceCommand extends BukkitCommand
                 return false;
             }
 
+            final List<BlockData> blockDataList = new ArrayList<>();
+            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(uuid);
+
             timer.start();
 
-            final List<BlockData> blockDataList = new ArrayList<>();
+            betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+                final int counter = replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace, blockDataList);
 
-            Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-                int counter = replaceBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), materialToBeReplace, materialToReplace, blockDataList);
-
-                final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
-
-                UndoUtils.addActionToList(undoBlocksList, ActionsEditor.SET, blockDataList);
+                UndoUtils.addActionToList(undoBlocksList, Actions.SET, blockDataList);
 
                 final double executionTimeSeconds = timer.stop();
 
@@ -70,7 +70,7 @@ public final class ReplaceCommand extends BukkitCommand
             });
         }
 
-        return false;
+        return true;
     }
 
     private int replaceBlocks(final Location firstSelection, final Location secondSelection, final Material materialToBeReplace, final Material materialToReplace, final List<BlockData> blockDataList)

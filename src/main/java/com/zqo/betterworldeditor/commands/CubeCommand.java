@@ -14,6 +14,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class CubeCommand extends BukkitCommand
 {
@@ -53,42 +54,50 @@ public final class CubeCommand extends BukkitCommand
             return true;
         }
 
+        final UUID uuid = player.getUniqueId();
         final World world = player.getWorld();
         final Location playerLocation = player.getLocation();
         final Vector direction = playerLocation.getDirection().normalize();
 
         final Location startLocation = playerLocation.clone().add(direction.multiply(sideLength / 2 + 1));
+        final List<BlockData> blockDataList = new ArrayList<>();
+        final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(uuid);
 
         timer.start();
 
-        final List<BlockData> blockDataList = new ArrayList<>();
 
-        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            for (int x = 0; x < sideLength; x++) {
-                for (int y = 0; y < sideLength; y++) {
-                    for (int z = 0; z < sideLength; z++) {
-                        if (x == 0 || x == sideLength - 1 ||
-                                y == 0 || y == sideLength - 1 ||
-                                z == 0 || z == sideLength - 1) {
-                            final Location blockLocation = startLocation.clone().add(x, y, z);
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            createCube(world, sideLength, material, startLocation, blockDataList);
 
-                            final Block block = world.getBlockAt(blockLocation);
-                            blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
-                            block.setType(material);
-                        }
-                    }
-                }
-            }
+            UndoUtils.addActionToList(undoBlocksList, Actions.CUBE, blockDataList);
 
-            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
-
-            UndoUtils.addActionToList(undoBlocksList, ActionsEditor.CUBE, blockDataList);
-
-            double executionTimeSeconds = timer.stop();
+            final double executionTimeSeconds = timer.stop();
 
             player.sendMessage("Cube crée avec succès en " + executionTimeSeconds + " secondes.");
         });
 
         return false;
+    }
+
+    private void createCube(final World world, final int sideLength, final Material material, final Location startLocation, final List<BlockData> blockDataList)
+    {
+        for (int x = 0; x < sideLength; x++) {
+            for (int y = 0; y < sideLength; y++) {
+                for (int z = 0; z < sideLength; z++) {
+                    if (x == 0 || x == sideLength - 1 ||
+                            y == 0 || y == sideLength - 1 ||
+                            z == 0 || z == sideLength - 1) {
+                        final Location blockLocation = startLocation.clone().add(x, y, z);
+                        final Block block = world.getBlockAt(blockLocation);
+
+                        if (!block.getType().equals(Material.AIR)) {
+                            blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
+                        }
+
+                        block.setType(material);
+                    }
+                }
+            }
+        }
     }
 }

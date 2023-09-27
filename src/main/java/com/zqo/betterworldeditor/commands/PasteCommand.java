@@ -3,7 +3,6 @@ package com.zqo.betterworldeditor.commands;
 import com.zqo.betterworldeditor.BetterWorldEditor;
 import com.zqo.betterworldeditor.api.BlockData;
 import com.zqo.betterworldeditor.api.CopiedBlocks;
-import com.zqo.betterworldeditor.api.SelectionManager;
 import com.zqo.betterworldeditor.api.Timer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -34,36 +33,43 @@ public final class PasteCommand extends BukkitCommand
             return false;
         }
 
-        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(player.getUniqueId());
+        final UUID uuid = player.getUniqueId();
+        final CopiedBlocks copiedBlocks = copiedBlocksMap.get(uuid);
         final List<BlockData> copiedBlockData = copiedBlocks.getBlocksData();
 
         if (copiedBlockData.isEmpty()) {
             player.sendMessage("Aucun bloc copié à coller.");
-            return true;
+            return false;
         }
 
         timer.start();
 
-        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            int counter = 0;
-
-            for (final BlockData blockData : copiedBlockData) {
-                final Location originalLocation = blockData.getLocation();
-                final Location newLocation = player.getLocation()
-                        .add(originalLocation.getX() - copiedBlockData.get(0).getLocation().getX(),
-                                originalLocation.getY() - copiedBlockData.get(0).getLocation().getY(),
-                                originalLocation.getZ() - copiedBlockData.get(0).getLocation().getZ());
-
-                player.getWorld().getBlockAt(newLocation).setType(blockData.getMaterial());
-                player.getWorld().getBlockAt(newLocation).setBlockData(blockData.getBlockData());
-                counter++;
-            }
-
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            final int counter = pasteBlocks(player, copiedBlockData);
             final double executionTimeSeconds = timer.stop();
 
             player.sendMessage("Collage effectué de " + counter + " blocs en " + executionTimeSeconds + " secondes.");
         });
 
-        return false;
+        return true;
+    }
+
+    private int pasteBlocks(final Player player, final List<BlockData> copiedBlockData)
+    {
+        int counter = 0;
+
+        for (final BlockData blockData : copiedBlockData) {
+            final Location originalLocation = blockData.location();
+            final Location newLocation = player.getLocation()
+                    .add(originalLocation.getX() - copiedBlockData.get(0).location().getX(),
+                            originalLocation.getY() - copiedBlockData.get(0).location().getY(),
+                            originalLocation.getZ() - copiedBlockData.get(0).location().getZ());
+
+            player.getWorld().getBlockAt(newLocation).setType(blockData.material());
+            player.getWorld().getBlockAt(newLocation).setBlockData(blockData.blockData());
+            counter++;
+        }
+
+        return counter;
     }
 }

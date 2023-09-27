@@ -5,10 +5,10 @@ import java.util.List;
 
 public final class UndoBlocks
 {
-    private List<List<BlockData>> blockDataList;
-    private ActionsEditor action;
+    private final List<List<BlockData>> blockDataList;
+    private final Actions action;
 
-    public UndoBlocks(final ActionsEditor action)
+    public UndoBlocks(final Actions action)
     {
         this.action = action;
         this.blockDataList = new ArrayList<>();
@@ -19,23 +19,13 @@ public final class UndoBlocks
         return !this.blockDataList.isEmpty() ? this.blockDataList.get(0) : null;
     }
 
-    public void addUndoBlocks(List<BlockData> blockDataList)
+    public void addUndoBlocks(final List<BlockData> blockDataList)
     {
         this.blockDataList.add(blockDataList);
     }
 
-    public void clearBlockDataList()
-    {
-        this.blockDataList.clear();
-    }
-
-    public ActionsEditor getAction()
+    public Actions getAction()
     {
         return this.action;
-    }
-
-    public void setAction(ActionsEditor action)
-    {
-        this.action = action;
     }
 }

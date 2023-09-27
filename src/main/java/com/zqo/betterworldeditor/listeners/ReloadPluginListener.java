@@ -1,6 +1,7 @@
 package com.zqo.betterworldeditor.listeners;
 
 import com.zqo.betterworldeditor.BetterWorldEditor;
+import com.zqo.betterworldeditor.api.CopiedBlocks;
 import com.zqo.betterworldeditor.api.SelectionManager;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -14,7 +15,6 @@ import java.util.UUID;
 
 public final class ReloadPluginListener implements Listener {
     private final BetterWorldEditor betterWorldEditor = BetterWorldEditor.getBetterWorldEditor();
-    private final Map<UUID, SelectionManager> selectionManager = betterWorldEditor.getSelectionManagerMap();
 
     @EventHandler
     public void onJoin(final PluginEnableEvent event)
@@ -22,16 +22,20 @@ public final class ReloadPluginListener implements Listener {
         for (final Player player : Bukkit.getOnlinePlayers()) {
             final UUID uuid = player.getUniqueId();
 
-            if (!selectionManager.containsKey(uuid)) {
-                selectionManager.put(uuid, new SelectionManager());
+            if (!betterWorldEditor.getSelectionManagerMap().containsKey(uuid)) {
+                betterWorldEditor.getSelectionManagerMap().put(uuid, new SelectionManager());
             }
-
+            
             if (!betterWorldEditor.getUndoBlocksMap().containsKey(uuid)) {
                 betterWorldEditor.getUndoBlocksMap().put(uuid, new ArrayList<>());
             }
 
             if (!betterWorldEditor.getRedoBlocksMap().containsKey(uuid)) {
                 betterWorldEditor.getRedoBlocksMap().put(uuid, new ArrayList<>());
+            }
+
+            if (!betterWorldEditor.getCopiedBlocksMap().containsKey(uuid)) {
+                betterWorldEditor.getCopiedBlocksMap().put(uuid, new CopiedBlocks());
             }
         }
     }

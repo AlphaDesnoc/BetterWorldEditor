@@ -34,30 +34,30 @@ public final class CutCommand extends BukkitCommand
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player.getUniqueId());
+        final UUID uuid = player.getUniqueId();
+        final SelectionManager selectionManager = selectionManagerMap.get(uuid);
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de cut quelque chose.");
             return true;
         }
 
+        final List<BlockData> blockDataList = new ArrayList<>();
+        final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(uuid);
+
         timer.start();
 
-        final List<BlockData> blockDataList = new ArrayList<>();
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            final int counter = cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), blockDataList);
 
-        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            int counter = cutBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), blockDataList);
-
-            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
-
-            UndoUtils.addActionToList(undoBlocksList, ActionsEditor.CUT, blockDataList);
+            UndoUtils.addActionToList(undoBlocksList, Actions.CUT, blockDataList);
 
             final double executionTimeSeconds = timer.stop();
 
             player.sendMessage("Découpe effectuée de " + counter + " blocs en " + executionTimeSeconds + " secondes.");
         });
 
-        return false;
+        return true;
     }
 
     private int cutBlocks(final Location firstSelection, final Location secondSelection, final List<BlockData> blockDataList)

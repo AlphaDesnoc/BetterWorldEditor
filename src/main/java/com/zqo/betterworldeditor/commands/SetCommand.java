@@ -32,7 +32,8 @@ public final class SetCommand extends BukkitCommand {
             return false;
         }
 
-        final SelectionManager selectionManager = selectionManagerMap.get(player.getUniqueId());
+        final UUID uuid = player.getUniqueId();
+        final SelectionManager selectionManager = selectionManagerMap.get(uuid);
 
         if (!selectionManager.hasCompleteSelection()) {
             player.sendMessage("Vous devez définir une sélection avec le bâton en fer avant de set quelque chose.");
@@ -43,28 +44,29 @@ public final class SetCommand extends BukkitCommand {
             final String preMat = "minecraft:";
             final String tempMaterial = preMat + args[0];
             final Material material = Material.matchMaterial(tempMaterial);
-            final List<BlockData> blockDataList = new ArrayList<>();
 
             if (material == null) {
                 player.sendMessage("Material invalide.");
                 return false;
             }
 
+            final List<BlockData> blockDataList = new ArrayList<>();
+            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(uuid);
+
             timer.start();
 
-            Bukkit.getScheduler().runTaskAsynchronously(betterWorldEditor, () -> {
-                int counter = setBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), material, blockDataList);
+            betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+                final int counter = setBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), material, blockDataList);
 
-                final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
-
-                UndoUtils.addActionToList(undoBlocksList, ActionsEditor.SET, blockDataList);
+                UndoUtils.addActionToList(undoBlocksList, Actions.SET, blockDataList);
 
                 final double executionTimeSeconds = timer.stop();
 
                 player.sendMessage("Collage effectué de " + counter + " blocs en " + executionTimeSeconds + " secondes.");
             });
         }
-        return false;
+
+        return true;
     }
 
     private int setBlocks(final Location firstSelection, final Location secondSelection, final Material material, final List<BlockData> blockDataList)

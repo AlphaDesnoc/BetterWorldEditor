@@ -5,10 +5,12 @@ import com.zqo.betterworldeditor.api.BlockData;
 import com.zqo.betterworldeditor.api.UndoBlocks;
 import com.zqo.betterworldeditor.api.UndoUtils;
 import org.bukkit.Location;
+import org.bukkit.block.Block;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.defaults.BukkitCommand;
 import org.bukkit.entity.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -46,22 +48,35 @@ public final class RedoCommand extends BukkitCommand
         final List<UndoBlocks> redoBlocksList = betterWorldEditor.getRedoBlocksList(uuid);
         final UndoBlocks redoBlocks = redoBlocksList.get(redoBlocksList.size()-1);
         final List<BlockData> blockDataList = redoBlocks.getUndoBlocks();
+        final List<BlockData> previousBlockDataList = new ArrayList<>();
 
         if (blockDataList == null) {
             return false;
         }
 
-        UndoUtils.addActionToList(undoBlocksList, redoBlocks.getAction(), blockDataList);
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            redoBlocks(blockDataList, previousBlockDataList);
 
-        blockDataList.forEach(blockData -> {
-            final Location location = blockData.getLocation();
-            location.getBlock().setType(blockData.getMaterial());
-            location.getBlock().setBlockData(blockData.getBlockData());
+            UndoUtils.addActionToList(undoBlocksList, redoBlocks.getAction(), previousBlockDataList);
+
+            redoBlocksList.remove(redoBlocksList.size()-1);
+
+            player.sendMessage("Blocs restaurés avec succès.");
         });
 
-        redoBlocksList.remove(redoBlocksList.size()-1);
+        return true;
+    }
 
-        player.sendMessage("[REDO] Blocs restaurés avec succès.");
-        return false;
+    private void redoBlocks(final List<BlockData> blockDataList, final List<BlockData> previousBlockDataList)
+    {
+        blockDataList.forEach(blockData -> {
+            final Location location = blockData.location();
+            final Block block = location.getBlock();
+
+            previousBlockDataList.add(new BlockData(location, block.getType(), block.getBlockData()));
+
+            block.setType(blockData.material());
+            block.setBlockData(blockData.blockData());
+        });
     }
 }

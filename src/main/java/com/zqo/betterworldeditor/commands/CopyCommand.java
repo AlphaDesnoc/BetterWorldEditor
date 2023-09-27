@@ -42,28 +42,38 @@ public final class CopyCommand extends BukkitCommand
             return false;
         }
 
-        copiedBlocks.clear();
+        if (!copiedBlocks.getBlocksData().isEmpty()) {
+            copiedBlocks.clear();
+        }
+
         timer.start();
 
-        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            int counter = copyBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), copiedBlocks);
-
-            double executionTimeSeconds = timer.stop();
+        betterWorldEditor.getServer().getScheduler().runTaskAsynchronously(betterWorldEditor, () -> {
+            final int counter = copyBlocks(selectionManager.getFirstSelection(), selectionManager.getSecondSelection(), copiedBlocks);
+            final double executionTimeSeconds = timer.stop();
 
             player.sendMessage("Copie effectuée de " + counter + " blocs en " + executionTimeSeconds + " secondes.");
         });
 
-        return false;
+        return true;
     }
 
     private int copyBlocks(final Location firstSelection, final Location secondSelection, final CopiedBlocks copiedBlocks)
     {
         int counter = 0;
 
-        for (int x = Math.min(firstSelection.getBlockX(), secondSelection.getBlockX()); x <= Math.max(firstSelection.getBlockX(), secondSelection.getBlockX()); x++) {
-            for (int y = Math.min(firstSelection.getBlockY(), secondSelection.getBlockY()); y <= Math.max(firstSelection.getBlockY(), secondSelection.getBlockY()); y++) {
-                for (int z = Math.min(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z <= Math.max(firstSelection.getBlockZ(), secondSelection.getBlockZ()); z++) {
-                    final Location location = new Location(firstSelection.getWorld(), x, y, z);
+        final org.bukkit.World world = firstSelection.getWorld();
+        final int minX = Math.min(firstSelection.getBlockX(), secondSelection.getBlockX());
+        final int minY = Math.min(firstSelection.getBlockY(), secondSelection.getBlockY());
+        final int minZ = Math.min(firstSelection.getBlockZ(), secondSelection.getBlockZ());
+        final int maxX = Math.max(firstSelection.getBlockX(), secondSelection.getBlockX());
+        final int maxY = Math.max(firstSelection.getBlockY(), secondSelection.getBlockY());
+        final int maxZ = Math.max(firstSelection.getBlockZ(), secondSelection.getBlockZ());
+
+        for (int x = minX; x <= maxX; x++) {
+            for (int y = minY; y <= maxY; y++) {
+                for (int z = minZ; z <= maxZ; z++) {
+                    final Location location = new Location(world, x, y, z);
                     final org.bukkit.block.Block block = location.getBlock();
 
                     copiedBlocks.addBlock(block);

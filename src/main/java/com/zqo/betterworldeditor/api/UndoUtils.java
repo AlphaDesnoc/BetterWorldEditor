@@ -6,7 +6,7 @@ public final class UndoUtils
 {
     public static void addActionToList(
             final List<UndoBlocks> undoBlocksList,
-            final ActionsEditor action,
+            final Actions action,
             final List<BlockData> blockDataList
     )
     {

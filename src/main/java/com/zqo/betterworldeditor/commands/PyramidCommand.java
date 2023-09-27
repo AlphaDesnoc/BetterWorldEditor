@@ -14,6 +14,7 @@ import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 public final class PyramidCommand extends BukkitCommand
 {
@@ -54,43 +55,51 @@ public final class PyramidCommand extends BukkitCommand
             return true;
         }
 
+        final UUID uuid = player.getUniqueId();
         final World world = player.getWorld();
         final Location playerLocation = player.getLocation();
         final Vector direction = playerLocation.getDirection().normalize();
 
         final Location baseCenter = playerLocation.clone().add(direction.multiply(height / 2));
         final int pyramidWidth = height * 2 - 1;
+        final List<BlockData> blockDataList = new ArrayList<>();
+        final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(uuid);
 
         timer.start();
 
-        final List<BlockData> blockDataList = new ArrayList<>();
+        betterWorldEditor.getServer().getScheduler().runTask(betterWorldEditor, () -> {
+            createPyramid(height, pyramidWidth, baseCenter, world, material, blockDataList);
 
-        Bukkit.getScheduler().runTask(betterWorldEditor, () -> {
-            for (int y = 0; y < height; y++) {
-                int blocksInLevel = pyramidWidth - y * 2;
-
-                for (int x = -blocksInLevel / 2; x <= blocksInLevel / 2; x++) {
-                    for (int z = -blocksInLevel / 2; z <= blocksInLevel / 2; z++) {
-                        final Location blockLocation = baseCenter.clone().add(x, y, z);
-
-                        if (y == 0 || Math.abs(x) == blocksInLevel / 2 || Math.abs(z) == blocksInLevel / 2) {
-                            final Block block = world.getBlockAt(blockLocation);
-                            blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
-                            block.setType(material);
-                        }
-                    }
-                }
-            }
-
-            final List<UndoBlocks> undoBlocksList = betterWorldEditor.getUndoBlocksList(player.getUniqueId());
-
-            UndoUtils.addActionToList(undoBlocksList, ActionsEditor.PYRAMID, blockDataList);
+            UndoUtils.addActionToList(undoBlocksList, Actions.PYRAMID, blockDataList);
 
             final double executionTimeSeconds = timer.stop();
 
             player.sendMessage("Pyramide créée avec succès en " + executionTimeSeconds + " secondes.");
         });
 
-        return false;
+        return true;
+    }
+
+    private void createPyramid(final int height, final int pyramidWidth, final Location baseCenter, final World world, final Material material, final List<BlockData> blockDataList)
+    {
+        for (int y = 0; y < height; y++) {
+            int blocksInLevel = pyramidWidth - y * 2;
+
+            for (int x = -blocksInLevel / 2; x <= blocksInLevel / 2; x++) {
+                for (int z = -blocksInLevel / 2; z <= blocksInLevel / 2; z++) {
+                    final Location blockLocation = baseCenter.clone().add(x, y, z);
+
+                    if (y == 0 || Math.abs(x) == blocksInLevel / 2 || Math.abs(z) == blocksInLevel / 2) {
+                        final Block block = world.getBlockAt(blockLocation);
+
+                        if (!block.getType().equals(Material.AIR)) {
+                            blockDataList.add(new BlockData(block.getLocation(), block.getType(), block.getBlockData()));
+                        }
+
+                        block.setType(material);
+                    }
+                }
+            }
+        }
     }
 }
